@@ -13,9 +13,17 @@ HTTPie in Rust.
 
 Key Studies:
 * Using trait `#[]`
+    > To be exactly, #[derive] attribute, capable of using basic implementation from some traits.
 * Why needs to derive trait in the remaining types?
-* What does `Parse()` do?
+    > explicitly declare using implementation from derived trait.
+* What does `parse()` do?
+    > parse string slice into any types implements the FromStr trait.
+
+    > string slice is the argument from command line.
+
+    > subcommand defined two support command: get and post. which are support different argument list.
 * What is `{:?}`?
+    > a formatter from trait Debug which formats value.
 
 ### HTTP Process
 
