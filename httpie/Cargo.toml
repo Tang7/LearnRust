@@ -8,4 +8,6 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0.43"
 clap = { version = "3", features = ["derive"] } # commond line parsing
-reqwest = "0.11.4"
+jsonxf = "1.1"
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+tokio = { version = "1", features = ["full"] } # async library

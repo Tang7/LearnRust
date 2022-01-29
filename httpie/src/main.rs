@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Parser;
-use reqwest::Url;
-use std::str::FromStr;
+use reqwest::{Client, Response, Url};
+use std::{collections::HashMap, str::FromStr};
 
 #[derive(Parser, Debug)]
 #[clap(version = "1.0")]
@@ -64,9 +64,53 @@ impl FromStr for KvPair {
     }
 }
 
-fn main() {
+async fn get(client: Client, args: &Get) -> Result<()> {
+    let resp = client.get(&args.url).send().await?;
+    Ok(print_resp(resp).await?)
+}
+
+async fn post(client: Client, args: &Post) -> Result<()> {
+    let mut body = HashMap::new();
+    for pair in args.body.iter() {
+        body.insert(&pair.k, &pair.v);
+    }
+
+    let resp = client.post(&args.url).json(&body).send().await?;
+    Ok(print_resp(resp).await?)
+}
+
+fn print_status(resp: &Response) {
+    let status = format!("{:?} {}", resp.version(), resp.status());
+    println!("{}\n", status);
+}
+
+fn print_headers(resp: &Response) {
+    for (name, value) in resp.headers() {
+        println!("{}: {:?}", name.to_string(), value);
+    }
+
+    println!();
+}
+
+async fn print_resp(resp: Response) -> Result<()> {
+    print_status(&resp);
+    print_headers(&resp);
+    let body = resp.text().await?;
+    println!("{}", body);
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
     let opts: Opts = Opts::parse();
     println!("{:?}", opts);
+    let client = Client::new();
+    let result = match opts.subcmd {
+        Subcommand::Get(ref args) => get(client, args).await?,
+        Subcommand::Post(ref args) => post(client, args).await?,
+    };
+
+    Ok(result)
 }
 
 #[cfg(test)]
