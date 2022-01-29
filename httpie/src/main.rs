@@ -1,35 +1,37 @@
 use anyhow::{anyhow, Result};
-use clap::{AppSettings, Clap};
+use clap::Parser;
 use reqwest::Url;
 use std::str::FromStr;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(version = "1.0")]
-#[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
     #[clap(subcommand)]
     subcmd: Subcommand,
 }
 
 // Only support Get / Post for now
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 enum Subcommand {
     Get(Get),
     Post(Post),
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 struct Get {
+    // http request URL
     #[clap(parse(try_from_str = parse_url))]
-    url: String, // http request url
+    url: String,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 struct Post {
+    // http request URL
     #[clap(parse(try_from_str = parse_url))]
-    url: String, // http request url
+    url: String,
+    // http requet body
     #[clap(parse(try_from_str = parse_kv_pair))]
-    body: Vec<KvPair>, // http request data, json Key-Value pair format
+    body: Vec<KvPair>,
 }
 
 fn parse_url(s: &str) -> Result<String> {

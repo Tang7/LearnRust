@@ -7,5 +7,5 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.43"
-clap = "3.0.0-beta.4"
+clap = { version = "3", features = ["derive"] } # commond line parsing
 reqwest = "0.11.4"
