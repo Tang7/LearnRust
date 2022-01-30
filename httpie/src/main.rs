@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use colored::Colorize;
 use mime::Mime;
 use reqwest::{header, Client, Response, Url};
 use std::{collections::HashMap, str::FromStr};
@@ -87,13 +88,13 @@ async fn post(client: Client, args: &Post) -> Result<()> {
 }
 
 fn print_status(resp: &Response) {
-    let status = format!("{:?} {}", resp.version(), resp.status());
+    let status = format!("{:?} {}", resp.version(), resp.status()).red();
     println!("{}\n", status);
 }
 
 fn print_headers(resp: &Response) {
     for (name, value) in resp.headers() {
-        println!("{}: {:?}", name.to_string(), value);
+        println!("{}: {:?}", name.to_string().green(), value);
     }
 
     println!();
