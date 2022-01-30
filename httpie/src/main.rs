@@ -1,7 +1,14 @@
 use anyhow::{anyhow, Result};
 use clap::Parser;
-use reqwest::{Client, Response, Url};
+use mime::Mime;
+use reqwest::{header, Client, Response, Url};
 use std::{collections::HashMap, str::FromStr};
+use syntect::{
+    easy::HighlightLines,
+    highlighting::{Style, ThemeSet},
+    parsing::SyntaxSet,
+    util::{as_24_bit_terminal_escaped, LinesWithEndings},
+};
 
 #[derive(Parser, Debug)]
 #[clap(version = "1.0")]
@@ -92,12 +99,41 @@ fn print_headers(resp: &Response) {
     println!();
 }
 
+fn print_body(m: Option<Mime>, body: &str) {
+    match m {
+        Some(v) if v == mime::APPLICATION_JSON => print_syntect(body, "json"),
+        Some(v) if v == mime::TEXT_HTML => print_syntect(body, "html"),
+
+        _ => println!("{}", body),
+    }
+}
+
 async fn print_resp(resp: Response) -> Result<()> {
     print_status(&resp);
     print_headers(&resp);
+    let mime = get_content_type(&resp);
     let body = resp.text().await?;
-    println!("{}", body);
+    print_body(mime, &body);
     Ok(())
+}
+
+fn get_content_type(resp: &Response) -> Option<Mime> {
+    resp.headers()
+        .get(header::CONTENT_TYPE)
+        .map(|v| v.to_str().unwrap().parse().unwrap())
+}
+
+fn print_syntect(s: &str, ext: &str) {
+    let ps = SyntaxSet::load_defaults_newlines();
+    let ts = ThemeSet::load_defaults();
+    let syntax = ps.find_syntax_by_extension(ext).unwrap();
+    let mut h = HighlightLines::new(syntax, &ts.themes["base16-ocean.dark"]);
+
+    for line in LinesWithEndings::from(s) {
+        let ranges: Vec<(Style, &str)> = h.highlight(line, &ps);
+        let escaped = as_24_bit_terminal_escaped(&ranges[..], true);
+        print!("{}", escaped);
+    }
 }
 
 #[tokio::main]
