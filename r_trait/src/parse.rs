@@ -2,7 +2,10 @@ use std::str::FromStr;
 use regex::Regex;
 
 pub trait Parse {
-    fn parse(s: &str) -> Self;
+    type Error;
+    fn parse(s: &str) -> Result<Self, Self::Error>
+    where
+        Self: Sized;
 }
 
 // restrict T has trait bound FromStr and Default
@@ -10,29 +13,39 @@ impl<T> Parse for T
 where
     T: FromStr + Default,
 {
-    fn parse(s: &str) -> Self {
+    type Error = String;
+    fn parse(s: &str) -> Result<Self, Self::Error> {
         let re: Regex = Regex::new(r"^[0-9]+(\.[0-9]+)?").unwrap();
-        let d = || Default::default();
-        
+
         if let Some(captures) = re.captures(s) {
             captures
                 .get(0)
-                .map_or(d(), |s| s.as_str().parse().unwrap_or(d()))
+                .map_or(Err("failed to capture".to_string()), |s| {
+                    s.as_str()
+                        .parse()
+                        .map_err(|_err| "failed to parse captured string".to_string())
+                })
         } else {
-            d()
+            Err("failed to capture string".to_string())
         }
     }
 }
 
 #[test]
 fn parse_test() {
-    assert_eq!(u32::parse("123abc"), 123);
-    assert_eq!(u32::parse("123.45abc"), 0);
-    assert_eq!(f64::parse("123.45abc"), 123.45);
-    assert_eq!(f64::parse("abc"), 0f64);
-    assert_eq!(u32::parse("abc123"), 0);
+    assert_eq!(u32::parse("123abc"), Ok(123));
+    assert_eq!(
+        u32::parse("123.45abc"),
+        Err("failed to parse captured string".into())
+    );
+    assert_eq!(f64::parse("123.45abc"), Ok(123.45));
+    assert!(f64::parse("abc").is_err());
+    assert_eq!(
+        u32::parse("abc123"),
+        Err("failed to capture string".to_string())
+    );
 }
 
 fn main() {
-    println!("result: {}", u8::parse("255 hello world!"));
+    println!("result: {:?}", u8::parse("255 hello world!"));
 }
