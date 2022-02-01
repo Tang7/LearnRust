@@ -9,5 +9,9 @@ edition = "2021"
 name = "parse"
 path = "src/parse.rs"
 
+[[bin]]
+name = "write"
+path = "src/write.rs"
+
 [dependencies]
 regex = "1.5"
