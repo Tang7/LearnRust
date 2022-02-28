@@ -9,4 +9,7 @@ edition = "2021"
 name = "rc_tree"
 path = "src/rc_tree.rs"
 
+[[bin]]
+name = "refcell_tree"
+path = "src/refcell_tree.rs"
 [dependencies]
